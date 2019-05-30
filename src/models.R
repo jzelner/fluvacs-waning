@@ -87,10 +87,8 @@ ol_m = c_logit(HAI_CAT ~ STUDY_ARM + VAX_LAG*STUDY_ARM + ENROLLED_0405 + MALE + 
 
                     
                     
-
 analysis_plan <- rbind(data_plan, 
                        gaussian_plan, 
                        ordered_logit_plan)
-
 
 

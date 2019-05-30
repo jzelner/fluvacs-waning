@@ -31,10 +31,15 @@ stanvars <- stanvar(scode = stan_funs,
 
 log_lik_cumulative_logit <- function(i, draws) {
   
-  mu <- draws$dpars$mu[, i]
+  mu <- draws$dpars$mu[,i]
   y <- draws$data$Y[i]
-  tv <- draws$stanvars$tv$sdata
+  tv <- draws$data$tv
   
-  cumulative_logit_lpmf(y, mu, tv)
+  ll <- rep(0, length(mu))
+  for (i in 1:length(mu)) {
+    ll[i] <- cumulative_logit_lpmf(y, mu[i], tv)
+  }
+  
+  return(ll)
   
 }
