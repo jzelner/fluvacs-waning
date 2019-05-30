@@ -1,5 +1,6 @@
 require(drake)
 source("src/models.R")
+source("lib/cumulative_logit.R")
 
 ## Make analysis plan to run all models
 make(analysis_plan, jobs = 2)
@@ -9,7 +10,7 @@ loadd(ol_m)
 loadd(gaussian_m)
 
 ## Expose functions for loo
-expose_functions(cumulative_logit_lpmf, vectorize=FALSE)
+expose_functions(ol_m, cumulative_logit_lpmf, vectorize=FALSE)
 
 ## Run loo
 loo(ol_m, gaussian_m)
