@@ -10,7 +10,7 @@ loadd(ol_m)
 loadd(gaussian_m)
 
 ## Expose functions for loo
-expose_functions(ol_m, cumulative_logit_lpmf, vectorize=FALSE)
+expose_functions(ol_m, vectorize=FALSE)
 
 ## Run loo
 loo(ol_m, gaussian_m)
