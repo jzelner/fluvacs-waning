@@ -4,6 +4,7 @@ require(readr)
 require(lubridate)
 require(drake)
 require(forcats)
+source("lib/cumulative_logit.R")
 pkgconfig::set_config("drake::strings_in_dots" = "literals")
 
 ## Define functions for processing input data here
@@ -54,17 +55,13 @@ assign_analysis_waves <- function(x, z) {
   df$PLATE[df$CORRECTION > 0] <- 1
   df$PLATE[df$CORRECTION < 0] <- 2
   df$PLATE <- as.factor(df$PLATE)
-  df$RAW_HAI <- 4*(2**(df$LOG2_HAI_H3NY - df$CORRECTION))
+  df$RAW_HAI <- round(4*(2**(df$LOG2_HAI_H3NY - df$CORRECTION)))
   df$RAW_LOG2_HAI <- log2(df$RAW_HAI/4)
   df$LOG2_HAI_F <- ordered(df$RAW_LOG2_HAI)
+  df$HAI_CAT <- df$RAW_LOG2_HAI + 1
  return(df)
 }
 
-order_logit_m <- brm(LOG2_HAI_F ~STUDY_ARM + VAX_LAG*STUDY_ARM + ENROLLED_0405 + MALE + AGE + PLATE,  
-                     data = fluv_d,
-                     family = cumulative("logit",
-                     threshold = "equidistant"))
-                     
 
 data_plan <- drake_plan(
   correction_d = read_csv(file_in("data/titer_corrections.csv")),
@@ -79,7 +76,21 @@ data_plan <- drake_plan(
 gaussian_plan <- drake_plan(gaussian_m = brm(RAW_LOG2_HAI ~ STUDY_ARM + VAX_LAG*STUDY_ARM + ENROLLED_0405 + MALE + AGE + PLATE +(1 + VAX_LAG | STUDYID), 
                                     data = fluv_d, 
                                     family = gaussian(),
-                                    chains = 1))
+                                    chains = 4))
 
-analysis_plan <- rbind(data_plan, gaussian_plan)
+ordered_logit_plan <- drake_plan(
+ol_m = c_logit(HAI_CAT ~ STUDY_ARM + VAX_LAG*STUDY_ARM + ENROLLED_0405 + MALE + AGE + PLATE + (1 + VAX_LAG | STUDYID), 
+               titer_levels(fluv_d$RAW_HAI), fluv_d, 
+               chains = 4)
+)
+
+
+                    
+                    
+
+analysis_plan <- rbind(data_plan, 
+                       gaussian_plan, 
+                       ordered_logit_plan)
+
+
 
